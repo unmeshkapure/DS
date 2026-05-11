@@ -1,0 +1,33 @@
+import mpi.*;
+
+public class Ass4 {
+    public static void main(String[] args) throws Exception {
+        MPI.Init(args);
+        int rank = MPI.COMM_WORLD.Rank();
+        int size = MPI.COMM_WORLD.Size();
+        int[] array = {1,2,3,4,5,6,7,8};
+        int n = array.length / size;
+        int[] local = new int[n];
+        MPI.COMM_WORLD.Scatter(array, 0, n, MPI.INT, local, 0, n, MPI.INT, 0);
+        int localSum = 0;
+        for (int i : local) localSum += i;
+        System.out.println("Process " + rank + " sum: " + localSum);
+        int[] total = new int[1];
+        MPI.COMM_WORLD.Reduce(new int[]{localSum}, 0, total, 0, 1, MPI.INT, MPI.SUM, 0);
+        if (rank == 0)
+            System.out.println("Final Sum = " + total[0]);
+        MPI.Finalize();
+    }
+}
+
+// array=send buffer // 0=send offset // n=elements sent per process // MPI.INT=data type // local=receive buffer // 0=receive offset // n=elements received // MPI.INT=data type // 0=root process
+//new int[]{localSum}=send buffer // 0=send offset // total=receive buffer // 0=receive offset // 1=number of elements // MPI.INT=data type // MPI.SUM=operation performed // 0=root process
+
+wget https://sourceforge.net/projects/mpjexpress/files/latest/download -o mpj.zip
+unzip mpj.zip
+cd mpj
+export MPJ_HOME=$PWD
+export PATH=$MPJ_HOME/bin:$PATH
+javac -cp $MPJ_HOME/lib/mpj.jar MPI_Sum.java
+mpjrun.sh -np 4 MPI_Sum
+

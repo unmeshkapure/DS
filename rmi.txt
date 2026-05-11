@@ -1,0 +1,70 @@
+AddServerIntf.java
+
+import java.rmi.*;
+import java.rmi.RemoteException;
+public interface AddServerIntf extends Remote {
+	double add(double num1, double num2) throws RemoteException;
+}
+
+AddServerImpl.java
+
+import java.rmi.*;
+import java.rmi.server.*;
+public class AddServerImpl extends UnicastRemoteObject implements AddServerIntf 
+{
+	public AddServerImpl() throws RemoteException 
+	{
+		super();
+	}
+	public double add(double num1, double num2) throws RemoteException 
+	{
+		System.out.println("Processing request in thread: " + Thread.currentThread().getName());
+		return num1 + num2;
+	}
+}
+
+AddServer.java
+
+import java.rmi.*;
+import java.rmi.registry.*;
+public class AddServer 
+{
+	public static void main(String args[]) 
+	{
+		try 
+		{
+			AddServerImpl addObj = new AddServerImpl();
+			Naming.rebind("AddServer", addObj);
+			System.out.println("Server Started");
+		}
+		catch (Exception e) {
+			System.out.println("Server Error: " + e);
+		}
+	}
+}
+
+AddClient.java
+
+import java.rmi.*;
+public class AddClient {
+	public static void main(String args[]) 
+	{
+		try 
+		{
+			AddServerIntf addObj = (AddServerIntf) Naming.lookup("rmi://localhost/AddServer");
+			double num1 = Double.parseDouble(args[0]);
+			double num2 = Double.parseDouble(args[1]);
+			double result = addObj.add(num1, num2);
+			System.out.println("Addition Result: " + result);
+		}
+		catch (Exception e) 
+		{
+			System.out.println("Client Error: " + e);
+		}
+	}
+}
+
+javac *.java
+rmiregistry
+java AddServer
+java AddClient 9 9
