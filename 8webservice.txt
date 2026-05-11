@@ -1,0 +1,176 @@
+import com.sun.net.httpserver.*;
+import java.io.*;
+import java.net.*;
+public class Ass8 {
+	public static void main(String[] args) throws Exception {
+		HttpServer server = HttpServer.create(new InetSocketAddress(3012), 0);
+		server.createContext("/add", (exchange) -> {
+			String query = exchange.getRequestURI().getQuery();
+			String[] params = query.split("&");
+			int a = Integer.parseInt(params[0].split("=")[1]);
+			int b = Integer.parseInt(params[1].split("=")[1]);
+			int result = a + b;
+			String response = "Result = " + result;
+			exchange.sendResponseHeaders(200, response.length());
+			OutputStream os = exchange.getResponseBody();
+			os.write(response.getBytes());
+			os.close();
+		});
+		server.start();
+		System.out.println("Server running at http://localhost:8000");
+	}
+}
+
+
+CalculatorService.java
+
+package webservice;
+
+import javax.jws.WebMethod;
+import javax.jws.WebService;
+
+@WebService
+public interface CalculatorService {
+
+    @WebMethod
+    int add(int a, int b);
+
+    @WebMethod
+    int sub(int a, int b);
+}
+
+CalculatorServiceImpl.java
+
+package webservice;
+
+import javax.jws.WebService;
+
+@WebService(endpointInterface = "webservice.CalculatorService")
+public class CalculatorServiceImpl implements CalculatorService {
+
+    public int add(int a, int b) {
+        return a + b;
+    }
+
+    public int sub(int a, int b) {
+        return a - b;
+    }
+}
+
+Server.java
+
+package webservice;
+
+import javax.xml.ws.Endpoint;
+
+public class Server {
+
+    public static void main(String[] args) {
+
+        Endpoint.publish(
+                "http://localhost:8080/calculator",
+                new CalculatorServiceImpl());
+
+        System.out.println("Web Service Started...");
+    }
+}
+
+Client.java
+
+package webservice;
+
+import java.net.URL;
+import javax.xml.namespace.QName;
+import javax.xml.ws.Service;
+
+public class Client {
+
+    public static void main(String[] args) throws Exception {
+
+        URL url = new URL(
+                        "http://localhost:8080/calculator?wsdl");
+
+        QName qname =
+                new QName(
+                        "http://webservice/",
+                        "CalculatorServiceImplService");
+
+        Service service =
+                Service.create(url, qname);
+
+        CalculatorService calc =
+                service.getPort(CalculatorService.class);
+
+        System.out.println("Addition = "
+                + calc.add(10, 5));
+
+        System.out.println("Subtraction = "
+                + calc.sub(10, 5));
+    }
+}
+
+
+https://dlc-cdn.sun.com/netbeans/8.0.2/final/
+chmod +x netbeans-8.2-linux.sh
+sudo ./netbeans-8.2-linux.sh
+
+using NetBeans IDE 8.2.
+
+Key Implementation Steps:
+
+Environment Setup: The instructor emphasizes using NetBeans IDE 8.2 (with GlassFish Server), noting that newer versions may face deployment issues with WSDL files (0:48 - 1:10).
+Creating the Web Service: 
+Create a Java Web Application project (3:40).
+Implement the Web Service with custom operations for basic calculator functions: Addition, Subtraction, Multiplication, and Division (6:42 - 9:28).
+Build and Deploy: Successfully build and deploy the project to the server to verify the operations using the Test Web Service feature (10:23 - 12:25).
+Creating the Web Service Client:
+Create a separate project for the client-side interface (12:49).
+Develop an HTML form (`index.html`) to capture two numeric inputs from the user (15:36 - 17:30).
+Create a Servlet to act as the communication bridge between the client request and the web service (14:46 - 15:27).
+Consume the Service: Generate the web service client within the project to access the calculator methods defined earlier (18:18 - 18:54).
+Styling: Use CSS in the `` section to improve the UI of the calculator form (25:24 - 28:06).
+
+Important Resources:
+The instructor mentions that the source code and additional updates are provided via their Telegram channel (29:42 - 30:00
+
+
+
+Based on the video description, this is SPPU BE IT LP-V Distributed Systems Lab Assignment 7 — creating a simple web service and a distributed application to consume it (using NetBeans IDE 8.2). Here are the implementation steps:
+Steps to Implement Assignment 7 — Web Service (SPPU LP-V)
+Part 1: Set Up the Environment
+Download and install NetBeans IDE 8.2 (link in the video description).
+Make sure JDK is installed and configured with NetBeans.
+Ensure GlassFish Server (bundled with NetBeans 8.2) is set up.
+Part 2: Create the Web Service (Server Side)
+Open NetBeans → File → New Project → Java Web → Web Application.
+Name the project (e.g., MyWebService) and select GlassFish as the server.
+Right-click the project → New → Web Service.
+Give the Web Service a name (e.g., Calculator) and package name.
+NetBeans will generate a @WebService annotated class automatically.
+Add web service operations (methods) inside the class, e.g.:
+add(int a, int b)
+subtract(int a, int b)
+multiply(int a, int b)
+(or any domain-specific operation)
+Annotate each method with @WebMethod.
+Right-click project → Deploy to deploy the service on GlassFish.
+Test the service by visiting: http://localhost:8080/MyWebService/Calculator?wsdl
+Part 3: Create the Client Application (Consumer Side)
+Open NetBeans → File → New Project → Java Application (name it e.g., WebServiceClient).
+Right-click the client project → New → Web Service Client.
+Provide the WSDL URL of your deployed web service (from Step 12).
+NetBeans will auto-generate the client stub classes.
+In your main() method, instantiate the service and call the operations:
+Java
+Run the client project and verify the output in the console.
+Part 4: Verify & Document
+Take a screenshot of the deployed WSDL URL in the browser.
+Take a screenshot of the client output showing the consumed web service result.
+Prepare your journal/practical file with problem statement, code, and output.
+Key Concepts to Know for Oral:
+What is a Web Service? (SOAP vs REST)
+What is WSDL?
+What is GlassFish/Application Server?
+What is @WebService and @WebMethod?
+How does a distributed application consume a web service?
+Let me know if you want the actual source code for the web service or the client!

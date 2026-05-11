@@ -1,0 +1,61 @@
+Server.java
+
+import java.io.*;
+import java.net.*;
+
+public class Server {
+    public static void main(String[] args) {
+        try {
+            ServerSocket serverSocket = new ServerSocket(5000);
+            System.out.println("Server is waiting for client...");
+            Socket socket = serverSocket.accept();
+            System.out.println("Client connected!");
+            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+            String clientMessage = "";
+            while (!clientMessage.equalsIgnoreCase("Over")) {
+                clientMessage = input.readLine();
+                if (clientMessage == null) break;
+                System.out.println("Client says: " + clientMessage);
+                if (clientMessage.equalsIgnoreCase("Over")) break;
+                output.println("Server received: " + clientMessage);
+            }
+            System.out.println("Connection closed.");
+            socket.close();
+            serverSocket.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+Client.java
+
+import java.io.*;
+import java.net.*;
+
+public class Client {
+    public static void main(String[] args) {
+        try {
+            Socket socket = new Socket("localhost", 5000);
+            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+            String message = "";
+            while (!message.equalsIgnoreCase("Over")) {
+                System.out.print("Enter message: ");
+                message = userInput.readLine();
+                output.println(message);
+                if (message.equalsIgnoreCase("Over")) break;
+                String serverResponse = input.readLine();
+                System.out.println("Server says: " + serverResponse);
+            }
+            System.out.println("Connection closed.");
+            socket.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
