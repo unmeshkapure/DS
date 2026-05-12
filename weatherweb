@@ -1,0 +1,274 @@
+WeatherClient.java
+package ds;
+
+import java.awt.*;
+import java.awt.event.*;
+
+import java.net.URL;
+
+import javax.swing.*;
+
+import javax.xml.namespace.QName;
+import javax.xml.ws.Service;
+
+public class WeatherClient extends JFrame
+        implements ActionListener {
+
+    JTextField t1, t2, t3;
+
+    JTextArea area;
+
+    JButton b1, b2, b3, b4;
+
+    WeatherService service;
+
+    WeatherClient() throws Exception {
+
+        // Connect to Web Service
+        URL url =
+                new URL(
+                        "http://localhost:8080/weather?wsdl");
+
+        QName qname =
+                new QName(
+                        "http://ds/",
+                        "WeatherServiceImplService");
+
+        Service ws =
+                Service.create(url, qname);
+
+        service =
+                ws.getPort(WeatherService.class);
+
+        // UI
+        setTitle("Weather System");
+
+        setSize(400, 450);
+
+        setLayout(new FlowLayout());
+
+        // City
+        add(new JLabel("City"));
+
+        t1 = new JTextField(20);
+
+        add(t1);
+
+        // Weather
+        add(new JLabel("Weather"));
+
+        t2 = new JTextField(20);
+
+        add(t2);
+
+        // Temperature
+        add(new JLabel("Temperature"));
+
+        t3 = new JTextField(20);
+
+        add(t3);
+
+        // Buttons
+        b1 = new JButton("Add");
+
+        b2 = new JButton("Update");
+
+        b3 = new JButton("Delete");
+
+        b4 = new JButton("View");
+
+        add(b1);
+
+        add(b2);
+
+        add(b3);
+
+        add(b4);
+
+        // Text Area
+        area = new JTextArea(10, 30);
+
+        add(area);
+
+        // Events
+        b1.addActionListener(this);
+
+        b2.addActionListener(this);
+
+        b3.addActionListener(this);
+
+        b4.addActionListener(this);
+
+        setVisible(true);
+
+        setDefaultCloseOperation(
+                JFrame.EXIT_ON_CLOSE);
+    }
+
+    public void actionPerformed(ActionEvent e) {
+
+        String city = t1.getText();
+
+        String weather = t2.getText();
+
+        String temp = t3.getText();
+
+        String data =
+                "Weather: " + weather +
+                " Temperature: " + temp +
+                " Degree Celsius";
+
+        // Add
+        if(e.getSource() == b1) {
+
+            area.setText(
+                    service.addCity(
+                            city, data));
+        }
+
+        // Update
+        if(e.getSource() == b2) {
+
+            area.setText(
+                    service.updateCity(
+                            city, data));
+        }
+
+        // Delete
+        if(e.getSource() == b3) {
+
+            area.setText(
+                    service.deleteCity(
+                            city));
+        }
+
+        // View
+        if(e.getSource() == b4) {
+
+            area.setText(
+                    service.viewWeather());
+        }
+    }
+
+    public static void main(String[] args)
+            throws Exception {
+
+        new WeatherClient();
+    }
+}
+
+
+
+WeatherServer.java
+package ds;
+
+import javax.xml.ws.Endpoint;
+
+public class WeatherServer {
+
+    public static void main(String[] args) {
+
+        Endpoint.publish(
+                "http://localhost:8080/weather",
+                new WeatherServiceImpl());
+
+        System.out.println(
+                "Weather Web Service Started...");
+    }
+}
+
+
+
+WeatherServiceImpl.java
+
+package ds;
+
+import java.util.HashMap;
+
+import javax.jws.WebService;
+
+@WebService(endpointInterface = "ds.WeatherService")
+
+public class WeatherServiceImpl
+        implements WeatherService {
+
+    HashMap<String, String> weatherMap =
+            new HashMap<String, String>();
+
+    // Add
+    public String addCity(
+            String city,
+            String weather) {
+
+        weatherMap.put(city, weather);
+
+        return "City Weather Added";
+    }
+
+    // Update
+    public String updateCity(
+            String city,
+            String weather) {
+
+        if(weatherMap.containsKey(city)) {
+
+            weatherMap.put(city, weather);
+
+            return "Weather Updated";
+        }
+
+        return "City Not Found";
+    }
+
+    // Delete
+    public String deleteCity(String city) {
+
+        if(weatherMap.containsKey(city)) {
+
+            weatherMap.remove(city);
+
+            return "City Deleted";
+        }
+
+        return "City Not Found";
+    }
+
+    // View
+    public String viewWeather() {
+
+        String result = "";
+
+        for(String city : weatherMap.keySet()) {
+
+            result +=
+                    "City: " + city +
+                    " " +
+                    weatherMap.get(city)
+                    + "\n";
+        }
+
+        return result;
+    }
+}
+
+WeatherService.java
+package ds;
+
+import javax.jws.WebMethod;
+import javax.jws.WebService;
+
+@WebService
+public interface WeatherService {
+
+    @WebMethod
+    String addCity(String city, String weather);
+
+    @WebMethod
+    String updateCity(String city, String weather);
+
+    @WebMethod
+    String deleteCity(String city);
+
+    @WebMethod
+    String viewWeather();
+}

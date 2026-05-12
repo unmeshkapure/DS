@@ -1,0 +1,275 @@
+// BookService.java
+
+package ds;
+
+import javax.jws.WebMethod;
+import javax.jws.WebService;
+
+@WebService
+public interface BookService {
+
+    @WebMethod
+    String addBook(String book, String details);
+
+    @WebMethod
+    String updateBook(String book, String details);
+
+    @WebMethod
+    String deleteBook(String book);
+
+    @WebMethod
+    String viewBooks();
+}
+
+
+// BookServiceImpl.java
+
+package ds;
+
+import java.util.HashMap;
+
+import javax.jws.WebService;
+
+@WebService(endpointInterface = "ds.BookService")
+
+public class BookServiceImpl
+        implements BookService {
+
+    HashMap<String, String> bookMap =
+            new HashMap<String, String>();
+
+    // Add
+    public String addBook(
+            String book,
+            String details) {
+
+        bookMap.put(book, details);
+
+        return "Book Added";
+    }
+
+    // Update
+    public String updateBook(
+            String book,
+            String details) {
+
+        if(bookMap.containsKey(book)) {
+
+            bookMap.put(book, details);
+
+            return "Book Updated";
+        }
+
+        return "Book Not Found";
+    }
+
+    // Delete
+    public String deleteBook(String book) {
+
+        if(bookMap.containsKey(book)) {
+
+            bookMap.remove(book);
+
+            return "Book Deleted";
+        }
+
+        return "Book Not Found";
+    }
+
+    // View
+    public String viewBooks() {
+
+        String result = "";
+
+        for(String book : bookMap.keySet()) {
+
+            result +=
+                    "Book Name: " + book +
+                    " " +
+                    bookMap.get(book)
+                    + "\n";
+        }
+
+        return result;
+    }
+}
+
+
+// BookClient.java
+
+package ds;
+
+import java.awt.*;
+import java.awt.event.*;
+
+import java.net.URL;
+
+import javax.swing.*;
+
+import javax.xml.namespace.QName;
+import javax.xml.ws.Service;
+
+public class BookClient extends JFrame
+        implements ActionListener {
+
+    JTextField t1, t2, t3;
+
+    JTextArea area;
+
+    JButton b1, b2, b3, b4;
+
+    BookService service;
+
+    BookClient() throws Exception {
+
+        // Connect to Web Service
+        URL url =
+                new URL(
+                        "http://localhost:8080/book?wsdl");
+
+        QName qname =
+                new QName(
+                        "http://ds/",
+                        "BookServiceImplService");
+
+        Service ws =
+                Service.create(url, qname);
+
+        service =
+                ws.getPort(BookService.class);
+
+        // UI
+        setTitle("Book Record System");
+
+        setSize(450, 450);
+
+        setLayout(new FlowLayout());
+
+        // Book Name
+        add(new JLabel("Book Name"));
+
+        t1 = new JTextField(20);
+
+        add(t1);
+
+        // Author
+        add(new JLabel("Book Author"));
+
+        t2 = new JTextField(20);
+
+        add(t2);
+
+        // Price
+        add(new JLabel("Book Price"));
+
+        t3 = new JTextField(20);
+
+        add(t3);
+
+        // Buttons
+        b1 = new JButton("Add");
+
+        b2 = new JButton("Update");
+
+        b3 = new JButton("Delete");
+
+        b4 = new JButton("View");
+
+        add(b1);
+
+        add(b2);
+
+        add(b3);
+
+        add(b4);
+
+        // Text Area
+        area = new JTextArea(10, 32);
+
+        add(area);
+
+        // Events
+        b1.addActionListener(this);
+
+        b2.addActionListener(this);
+
+        b3.addActionListener(this);
+
+        b4.addActionListener(this);
+
+        setVisible(true);
+
+        setDefaultCloseOperation(
+                JFrame.EXIT_ON_CLOSE);
+    }
+
+    public void actionPerformed(ActionEvent e) {
+
+        String book = t1.getText();
+
+        String author = t2.getText();
+
+        String price = t3.getText();
+
+        String details =
+                "Author: " + author +
+                " Price: " + price;
+
+        // Add
+        if(e.getSource() == b1) {
+
+            area.setText(
+                    service.addBook(
+                            book, details));
+        }
+
+        // Update
+        if(e.getSource() == b2) {
+
+            area.setText(
+                    service.updateBook(
+                            book, details));
+        }
+
+        // Delete
+        if(e.getSource() == b3) {
+
+            area.setText(
+                    service.deleteBook(
+                            book));
+        }
+
+        // View
+        if(e.getSource() == b4) {
+
+            area.setText(
+                    service.viewBooks());
+        }
+    }
+
+    public static void main(String[] args)
+            throws Exception {
+
+        new BookClient();
+    }
+}
+
+
+// BookServer.java
+
+package ds;
+
+import javax.xml.ws.Endpoint;
+
+public class BookServer {
+
+    public static void main(String[] args) {
+
+        Endpoint.publish(
+                "http://localhost:8080/book",
+                new BookServiceImpl());
+
+        System.out.println(
+                "Book Web Service Started...");
+    }
+}

@@ -1,0 +1,252 @@
+StudentClient.java
+
+package ds;
+
+import java.awt.*;
+import java.awt.event.*;
+
+import java.net.URL;
+
+import javax.swing.*;
+
+import javax.xml.namespace.QName;
+import javax.xml.ws.Service;
+
+public class StudentClient extends JFrame
+        implements ActionListener {
+
+    JTextField t1, t2;
+
+    JTextArea area;
+
+    JButton b1, b2, b3, b4;
+
+    StudentService service;
+
+    StudentClient() throws Exception {
+
+        // Connect to Web Service
+        URL url =
+                new URL(
+                        "http://localhost:8080/student?wsdl");
+
+        QName qname =
+                new QName(
+                        "http://ds/",
+                        "StudentServiceImplService");
+
+        Service ws =
+                Service.create(url, qname);
+
+        service =
+                ws.getPort(StudentService.class);
+
+        // UI
+        setTitle("Student Record System");
+
+        setSize(400, 400);
+
+        setLayout(new FlowLayout());
+
+        add(new JLabel("Roll No"));
+
+        t1 = new JTextField(20);
+
+        add(t1);
+
+        add(new JLabel("Name"));
+
+        t2 = new JTextField(20);
+
+        add(t2);
+
+        b1 = new JButton("Add");
+
+        b2 = new JButton("Update");
+
+        b3 = new JButton("Delete");
+
+        b4 = new JButton("View");
+
+        add(b1);
+
+        add(b2);
+
+        add(b3);
+
+        add(b4);
+
+        area = new JTextArea(10, 30);
+
+        add(area);
+
+        b1.addActionListener(this);
+
+        b2.addActionListener(this);
+
+        b3.addActionListener(this);
+
+        b4.addActionListener(this);
+
+        setVisible(true);
+    }
+
+    public void actionPerformed(ActionEvent e) {
+
+        int roll =
+                Integer.parseInt(t1.getText());
+
+        String name = t2.getText();
+
+        // Add
+        if(e.getSource() == b1) {
+
+            area.setText(
+                    service.addStudent(
+                            roll, name));
+        }
+
+        // Update
+        if(e.getSource() == b2) {
+
+            area.setText(
+                    service.updateStudent(
+                            roll, name));
+        }
+
+        // Delete
+        if(e.getSource() == b3) {
+
+            area.setText(
+                    service.deleteStudent(
+                            roll));
+        }
+
+        // View
+        if(e.getSource() == b4) {
+
+            area.setText(
+                    service.viewStudents());
+        }
+    }
+
+    public static void main(String[] args)
+            throws Exception {
+
+        new StudentClient();
+    }
+}
+
+
+
+StudentServer.java
+package ds;
+
+import javax.xml.ws.Endpoint;
+
+public class StudentServer {
+
+    public static void main(String[] args) {
+
+        Endpoint.publish(
+                "http://localhost:8080/student",
+                new StudentServiceImpl());
+
+        System.out.println(
+                "Web Service Started...");
+    }
+
+}
+
+
+StudentServiceImpl.java 
+package ds;
+
+import java.util.HashMap;
+import javax.jws.WebService;
+
+@WebService(endpointInterface = "ds.StudentService")
+
+public class StudentServiceImpl implements StudentService {
+
+    HashMap<Integer, String> students =
+            new HashMap<Integer, String>();
+
+    // Add
+    public String addStudent(int roll, String name) {
+
+        students.put(roll, name);
+
+        return "Student Added";
+    }
+
+    // Update
+    public String updateStudent(int roll, String name) {
+
+        if(students.containsKey(roll)) {
+
+            students.put(roll, name);
+
+            return "Student Updated";
+        }
+
+        return "Student Not Found";
+    }
+
+    // Delete
+    public String deleteStudent(int roll) {
+
+        if(students.containsKey(roll)) {
+
+            students.remove(roll);
+
+            return "Student Deleted";
+        }
+
+        return "Student Not Found";
+    }
+
+    // View
+    public String viewStudents() {
+
+        String result = "";
+
+        for(Integer roll : students.keySet()) {
+
+            result +=
+                    "Roll No: " + roll +
+                    " Name: " + students.get(roll)
+                    + "\n";
+        }
+
+        return result;
+    }
+}
+
+StudentService.java
+package ds;
+
+import javax.jws.WebMethod;
+import javax.jws.WebService;
+
+@WebService
+public interface StudentService {
+
+    @WebMethod
+    String addStudent(int roll, String name);
+
+    @WebMethod
+    String updateStudent(int roll, String name);
+
+    @WebMethod
+    String deleteStudent(int roll);
+
+    @WebMethod
+    String viewStudents();
+}
+
+
+
+
+Create ds package and add files to it 
+
